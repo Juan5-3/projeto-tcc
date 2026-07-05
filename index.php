@@ -1,15 +1,60 @@
 <?php
 // ShopBR - Home Page
-$categories = [
-    ['slug' => 'eletronicos',  'name' => 'Eletrônicos',   'icon' => '📱'],
-    ['slug' => 'roupas',       'name' => 'Roupas',         'icon' => '👗'],
-    ['slug' => 'casa',         'name' => 'Casa e Jardim',  'icon' => '🏠'],
-    ['slug' => 'esportes',     'name' => 'Esportes',       'icon' => '⚽'],
-    ['slug' => 'livros',       'name' => 'Livros',         'icon' => '📚'],
-    ['slug' => 'beleza',       'name' => 'Beleza',         'icon' => '💄'],
-    ['slug' => 'brinquedos',   'name' => 'Brinquedos',     'icon' => '🧸'],
-    ['slug' => 'informatica',  'name' => 'Informática',    'icon' => '💻'],
-];
+require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/config/session.php';
+
+$categories = [];
+$ofertas    = [];
+
+try {
+    $db = getDB();
+
+    // Categorias
+    $stmt = $db->query('SELECT slug, nome AS name, icone AS icon FROM categorias ORDER BY id');
+    $categories = $stmt->fetchAll();
+
+    // Ofertas do dia — as 8 mais visualizadas com oferta ativa
+    $stmtO = $db->query("
+        SELECT
+            o.id           AS oferta_id,
+            o.desconto_pct,
+            o.preco_oferta,
+            o.data_fim,
+            p.id           AS produto_id,
+            p.nome         AS produto_nome,
+            p.preco        AS preco_original,
+            p.imagem_url,
+            c.slug         AS categoria_slug,
+            v.nome_loja
+        FROM ofertas o
+        INNER JOIN produtos   p ON p.id = o.produto_id
+        INNER JOIN categorias c ON c.id = p.categoria_id
+        INNER JOIN vendedores v ON v.id = p.vendedor_id
+        WHERE o.ativa = 1 AND o.data_fim > NOW() AND p.ativo = 1
+        ORDER BY p.visualizacoes DESC, o.criado_em DESC
+        LIMIT 8
+    ");
+    $ofertas = $stmtO->fetchAll();
+
+} catch (PDOException $e) {
+    $categories = [
+        ['slug' => 'eletronicos',  'name' => 'Eletrônicos',   'icon' => '📱'],
+        ['slug' => 'roupas',       'name' => 'Roupas',         'icon' => '👗'],
+        ['slug' => 'casa',         'name' => 'Casa e Jardim',  'icon' => '🏠'],
+        ['slug' => 'esportes',     'name' => 'Esportes',       'icon' => '⚽'],
+        ['slug' => 'livros',       'name' => 'Livros',         'icon' => '📚'],
+        ['slug' => 'beleza',       'name' => 'Beleza',         'icon' => '💄'],
+        ['slug' => 'brinquedos',   'name' => 'Brinquedos',     'icon' => '🧸'],
+        ['slug' => 'informatica',  'name' => 'Informática',    'icon' => '💻'],
+    ];
+}
+
+function fmtPreco(float $v): string {
+    return 'R$ ' . number_format($v, 2, ',', '.');
+}
+
+$headerActivePage = 'inicio';
+$headerBase       = '';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -22,49 +67,7 @@ $categories = [
 </head>
 <body>
 
-<!-- ══ HEADER ══ -->
-<header class="site-header" role="banner">
-    <div class="container header-inner">
-        <a href="index.php" class="site-logo" aria-label="ShopBR — Página inicial">Shop<span>BR</span></a>
-
-        <div class="header-search" role="search">
-            <label for="search-input" class="sr-only">Buscar produtos</label>
-            <input
-                type="search"
-                id="search-input"
-                name="q"
-                placeholder="Buscar produtos..."
-                aria-label="Campo de busca"
-                autocomplete="off"
-            >
-            <button class="header-search-btn" aria-label="Buscar">
-                🔍
-            </button>
-        </div>
-
-        <button
-            class="hamburger"
-            id="hamburger-btn"
-            aria-label="Abrir menu de navegação"
-            aria-expanded="false"
-            aria-controls="main-nav"
-        >
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
-
-        <nav class="header-nav" id="main-nav" role="navigation" aria-label="Navegação principal">
-            <a href="index.php" aria-current="page">Início</a>
-            <a href="#categorias">Categorias</a>
-            <a href="#ofertas">Ofertas</a>
-            <a href="cadastro-vendedor.php">Seja um Vendedor</a>
-            <a href="login.php" class="btn btn-primary" aria-label="Cadastre-se como vendedor">
-                Entrar
-            </a>
-        </nav>
-    </div>
-</header>
+<?php require_once __DIR__ . '/includes/header.php'; ?>
 
 <main>
     <!-- ══ HERO ══ -->
@@ -116,17 +119,58 @@ $categories = [
         </div>
     </section>
 
-    <!-- ══ OFFERS PLACEHOLDER ══ -->
+    <!-- ══ OFFERS ══ -->
     <section class="section" id="ofertas" aria-labelledby="offers-heading" style="background:var(--color-surface);border-top:1px solid var(--color-border);border-bottom:1px solid var(--color-border);">
         <div class="container">
             <div class="section-header">
                 <h2 class="section-title" id="offers-heading">Ofertas do Dia</h2>
+                <?php if (!empty($ofertas)): ?>
+                    <a href="busca.php?q=" class="text-muted" style="font-size:13px;">Ver todos os produtos</a>
+                <?php endif; ?>
             </div>
-            <div class="empty-message" role="status">
-                <div class="empty-icon">🏷️</div>
-                <h3>Ofertas em breve</h3>
-                <p>Novas promoções chegando! Fique de olho.</p>
-            </div>
+
+            <?php if (empty($ofertas)): ?>
+                <div class="empty-message" role="status">
+                    <div class="empty-icon">🏷️</div>
+                    <h3>Ofertas em breve</h3>
+                    <p>Novas promoções chegando! Fique de olho.</p>
+                </div>
+            <?php else: ?>
+                <div class="offers-grid" role="list">
+                    <?php foreach ($ofertas as $of):
+                        $nomeProd    = htmlspecialchars($of['produto_nome'], ENT_QUOTES, 'UTF-8');
+                        $catSlug     = htmlspecialchars($of['categoria_slug'], ENT_QUOTES, 'UTF-8');
+                        $loja        = htmlspecialchars($of['nome_loja'], ENT_QUOTES, 'UTF-8');
+                        $desconto    = (int) $of['desconto_pct'];
+                        $precoOrig   = fmtPreco((float) $of['preco_original']);
+                        $precoOferta = fmtPreco((float) $of['preco_oferta']);
+                        $imgUrl      = $of['imagem_url'] ? htmlspecialchars($of['imagem_url'], ENT_QUOTES, 'UTF-8') : null;
+                        $dataFim     = date('d/m H:i', strtotime($of['data_fim']));
+                    ?>
+                        <article class="offer-card" role="listitem" aria-label="<?= $nomeProd ?>">
+                            <a href="categoria.php?slug=<?= $catSlug ?>" class="offer-card-link">
+                                <div class="offer-badge">-<?= $desconto ?>%</div>
+                                <div class="offer-image" aria-hidden="true">
+                                    <?php if ($imgUrl): ?>
+                                        <img src="<?= $imgUrl ?>" alt="<?= $nomeProd ?>" loading="lazy">
+                                    <?php else: ?>
+                                        📦
+                                    <?php endif; ?>
+                                </div>
+                                <div class="offer-info">
+                                    <h3 class="offer-name"><?= $nomeProd ?></h3>
+                                    <p class="offer-store">🏪 <?= $loja ?></p>
+                                    <div class="offer-prices">
+                                        <span class="offer-price-original"><?= $precoOrig ?></span>
+                                        <span class="offer-price-final"><?= $precoOferta ?></span>
+                                    </div>
+                                    <p class="offer-expiry">⏱ Até <?= $dataFim ?></p>
+                                </div>
+                            </a>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
         </div>
     </section>
 
@@ -157,10 +201,7 @@ $categories = [
             <div class="footer-links">
                 <h4>Links Úteis</h4>
                 <ul>
-                    <li><a href="#">Sobre Nós</a></li>
-                    <li><a href="#">Contato</a></li>
-                    <li><a href="#">Termos de Uso</a></li>
-                    <li><a href="#">Política de Privacidade</a></li>
+                    <li><a href="sobre.php">Sobre Nós</a></li>
                 </ul>
             </div>
         </div>

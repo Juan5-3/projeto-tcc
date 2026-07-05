@@ -2,7 +2,8 @@
  * ShopBR — main.js
  * Handles:
  *   1. Mobile hamburger menu toggle
- *   2. Product comparison bar logic (categoria.php)
+ *   2. User account dropdown (header)
+ *   3. Product comparison bar logic (categoria.php)
  *      - sessionStorage key: 'compareList'
  *      - Max 3 products
  */
@@ -14,7 +15,7 @@
     const MAX_COMPARE = 3;
 
     /* ────────────────────────────────────────────
-       Hamburger menu
+       1. Hamburger menu
     ──────────────────────────────────────────── */
     function initHamburger() {
         var btn = document.getElementById('hamburger-btn');
@@ -38,7 +39,40 @@
     }
 
     /* ────────────────────────────────────────────
-       sessionStorage helpers
+       2. User account dropdown
+    ──────────────────────────────────────────── */
+    function initUserDropdown() {
+        var userBtn      = document.getElementById('header-user-btn');
+        var userDropdown = document.getElementById('user-dropdown');
+        if (!userBtn || !userDropdown) return;
+
+        // Toggle ao clicar no botão
+        userBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var isOpen = userDropdown.classList.toggle('open');
+            userBtn.setAttribute('aria-expanded', String(isOpen));
+        });
+
+        // Fecha ao clicar fora
+        document.addEventListener('click', function (e) {
+            if (!userBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.remove('open');
+                userBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        // Fecha com Escape
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                userDropdown.classList.remove('open');
+                userBtn.setAttribute('aria-expanded', 'false');
+                userBtn.focus();
+            }
+        });
+    }
+
+    /* ────────────────────────────────────────────
+       3. sessionStorage helpers
     ──────────────────────────────────────────── */
     function getCompareList() {
         try {
@@ -64,25 +98,23 @@
     }
 
     /* ────────────────────────────────────────────
-       Comparison bar rendering
+       4. Comparison bar rendering
     ──────────────────────────────────────────── */
     function updateComparisonBar() {
-        var bar       = document.getElementById('comparison-bar');
-        var itemsEl   = document.getElementById('comparison-bar-items');
+        var bar        = document.getElementById('comparison-bar');
+        var itemsEl    = document.getElementById('comparison-bar-items');
         var compareBtn = document.getElementById('compare-btn');
 
         if (!bar || !itemsEl) return;
 
         var list = getCompareList();
 
-        // Show/hide bar
         if (list.length >= 2) {
             bar.classList.add('visible');
         } else {
             bar.classList.remove('visible');
         }
 
-        // Build items HTML
         itemsEl.innerHTML = '';
         list.forEach(function (product) {
             var item = document.createElement('div');
@@ -97,7 +129,6 @@
             removeBtn.innerHTML = '&times;';
             removeBtn.setAttribute('aria-label', 'Remover ' + product.name + ' da comparação');
             removeBtn.setAttribute('type', 'button');
-
             removeBtn.addEventListener('click', function () {
                 removeProductFromCompare(String(product.id));
             });
@@ -107,7 +138,6 @@
             itemsEl.appendChild(item);
         });
 
-        // Update compare button state
         if (compareBtn) {
             compareBtn.disabled = list.length < 2;
         }
@@ -122,38 +152,29 @@
             saveCompareList(list);
         }
 
-        // Uncheck the corresponding checkbox on the page
-        var checkbox = document.querySelector(
-            '.compare-checkbox[data-id="' + id + '"]'
-        );
-        if (checkbox) {
-            checkbox.checked = false;
-        }
+        var checkbox = document.querySelector('.compare-checkbox[data-id="' + id + '"]');
+        if (checkbox) checkbox.checked = false;
 
         updateComparisonBar();
     }
 
     /* ────────────────────────────────────────────
-       Checkbox event handling
+       5. Checkbox event handling
     ──────────────────────────────────────────── */
     function initComparisonCheckboxes() {
         var checkboxes = document.querySelectorAll('.compare-checkbox');
         if (!checkboxes.length) return;
 
-        // Restore checkbox states from sessionStorage
         var list = getCompareList();
         checkboxes.forEach(function (cb) {
-            var idx = findProductById(list, cb.dataset.id);
-            cb.checked = idx !== -1;
+            cb.checked = findProductById(list, cb.dataset.id) !== -1;
         });
 
-        // Attach change listeners
         checkboxes.forEach(function (cb) {
             cb.addEventListener('change', function () {
                 var list = getCompareList();
 
                 if (cb.checked) {
-                    // Check max
                     if (list.length >= MAX_COMPARE) {
                         cb.checked = false;
                         alert(
@@ -162,19 +183,16 @@
                         );
                         return;
                     }
-
-                    // Add to list
-                    var product = {
-                        id:       cb.dataset.id,
-                        name:     cb.dataset.name,
-                        price:    cb.dataset.price,
-                        category: cb.dataset.category,
-                        rating:   cb.dataset.rating,
-                        image:    cb.dataset.image,
-                    };
-                    list.push(product);
+                    list.push({
+                        id:            cb.dataset.id,
+                        name:          cb.dataset.name,
+                        price:         cb.dataset.price,
+                        priceOriginal: cb.dataset.priceOriginal || '',
+                        category:      cb.dataset.category,
+                        rating:        cb.dataset.rating,
+                        image:         cb.dataset.image,
+                    });
                 } else {
-                    // Remove from list
                     var index = findProductById(list, cb.dataset.id);
                     if (index !== -1) list.splice(index, 1);
                 }
@@ -184,27 +202,25 @@
             });
         });
 
-        // Initial bar render
         updateComparisonBar();
     }
 
     /* ────────────────────────────────────────────
-       Compare button — navigate to comparar.php
+       6. Compare button — navigate to comparar.php
     ──────────────────────────────────────────── */
     function initCompareButton() {
         var compareBtn = document.getElementById('compare-btn');
         if (!compareBtn) return;
 
         compareBtn.addEventListener('click', function () {
-            var list = getCompareList();
-            if (list.length >= 2) {
+            if (getCompareList().length >= 2) {
                 window.location.href = 'comparar.php';
             }
         });
     }
 
     /* ────────────────────────────────────────────
-       Clear all button
+       7. Clear all button
     ──────────────────────────────────────────── */
     function initClearButton() {
         var clearBtn = document.getElementById('clear-compare-btn');
@@ -212,12 +228,9 @@
 
         clearBtn.addEventListener('click', function () {
             saveCompareList([]);
-
-            // Uncheck all checkboxes
             document.querySelectorAll('.compare-checkbox').forEach(function (cb) {
                 cb.checked = false;
             });
-
             updateComparisonBar();
         });
     }
@@ -227,6 +240,7 @@
     ──────────────────────────────────────────── */
     document.addEventListener('DOMContentLoaded', function () {
         initHamburger();
+        initUserDropdown();
         initComparisonCheckboxes();
         initCompareButton();
         initClearButton();

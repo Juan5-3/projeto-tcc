@@ -1,6 +1,7 @@
 <?php
 // ShopBR - Product Comparison Page
-// Products are loaded entirely via JS from sessionStorage
+require_once __DIR__ . '/config/session.php';
+$headerBase = '';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -13,29 +14,7 @@
 </head>
 <body>
 
-<!-- ══ HEADER ══ -->
-<header class="site-header" role="banner">
-    <div class="container header-inner">
-        <a href="index.php" class="site-logo" aria-label="ShopBR — Página inicial">Shop<span>BR</span></a>
-
-        <button
-            class="hamburger"
-            id="hamburger-btn"
-            aria-label="Abrir menu de navegação"
-            aria-expanded="false"
-            aria-controls="main-nav"
-        >
-            <span></span><span></span><span></span>
-        </button>
-
-        <nav class="header-nav" id="main-nav" role="navigation" aria-label="Navegação principal">
-            <a href="index.php">Início</a>
-            <a href="index.php#categorias">Categorias</a>
-            <a href="login.php">Entrar</a>
-            <a href="cadastro-vendedor.php" class="btn btn-primary">Seja um Vendedor</a>
-        </nav>
-    </div>
-</header>
+<?php require_once __DIR__ . '/includes/header.php'; ?>
 
 <main>
     <div class="compare-page">

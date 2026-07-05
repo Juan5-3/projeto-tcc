@@ -94,7 +94,15 @@
         // Image row
         var imageCells = '';
         list.forEach(function (product) {
-            imageCells += '<td class="compare-image-cell" aria-hidden="true">' + esc(product.image) + '</td>';
+            var imgHtml;
+            var url = String(product.image || '').trim();
+            // Se parece uma URL (começa com http ou /) renderiza como <img>, senão usa como emoji/texto
+            if (url.match(/^https?:\/\//i) || url.startsWith('/')) {
+                imgHtml = '<img src="' + esc(url) + '" alt="' + esc(product.name) + '" style="max-width:100px;max-height:100px;object-fit:contain;display:block;margin:0 auto;" loading="lazy">';
+            } else {
+                imgHtml = '<span style="font-size:48px;display:block;text-align:center;">' + esc(url || '📦') + '</span>';
+            }
+            imageCells += '<td class="compare-image-cell" aria-hidden="true">' + imgHtml + '</td>';
         });
 
         // Name row
@@ -103,10 +111,14 @@
             nameCells += '<td>' + esc(product.name) + '</td>';
         });
 
-        // Price row
+        // Price row — mostra preço original riscado se houver oferta
         var priceCells = '';
         list.forEach(function (product) {
-            priceCells += '<td><strong style="color:var(--color-primary);">' + esc(product.price) + '</strong></td>';
+            var priceHtml = '<strong style="color:var(--color-primary);">' + esc(product.price) + '</strong>';
+            if (product.priceOriginal && product.priceOriginal !== product.price) {
+                priceHtml = '<span style="font-size:12px;color:#9e9e9e;text-decoration:line-through;margin-right:6px;">' + esc(product.priceOriginal) + '</span>' + priceHtml;
+            }
+            priceCells += '<td>' + priceHtml + '</td>';
         });
 
         // Category row
@@ -152,10 +164,6 @@
             '      <tr>',
             '        <th scope="row" class="row-header">Categoria</th>',
             categoryCells,
-            '      </tr>',
-            '      <tr>',
-            '        <th scope="row" class="row-header">Avaliação</th>',
-            ratingCells,
             '      </tr>',
             '      <tr>',
             '        <th scope="row" class="row-header">Ações</th>',
