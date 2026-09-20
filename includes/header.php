@@ -139,6 +139,9 @@ if ($estaLogado) {
                             <a href="<?= $base ?>carrinho.php" class="user-dropdown-item" role="menuitem">
                                 🛒 Meu Carrinho
                             </a>
+                            <a href="<?= $base ?>historico-pedidos.php" class="user-dropdown-item" role="menuitem">
+                                📋 Meus Pedidos
+                            </a>
                         <?php endif; ?>
                         <a href="<?= $base ?>api/auth/logout.php"
                            class="user-dropdown-item user-dropdown-logout" role="menuitem">

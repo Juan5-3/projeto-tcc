@@ -181,10 +181,18 @@ function fmtBRL(float $v): string {
                         <span>Total</span>
                         <strong><?= fmtBRL($subtotal) ?></strong>
                     </div>
-                    <button class="btn btn-primary btn-block" style="margin-top:20px;" disabled title="Em breve">
-                        Finalizar Compra
+                    <button
+                        class="btn btn-primary btn-block"
+                        id="btn-finalizar"
+                        style="margin-top:20px;"
+                        onclick="finalizarCompra()"
+                    >
+                        ✅ Finalizar Compra
                     </button>
-                    <p style="font-size:12px;color:var(--color-text-muted);text-align:center;margin-top:8px;">Pagamento em breve.</p>
+                    <a
+                        href="historico-pedidos.php"
+                        style="display:block;text-align:center;font-size:13px;margin-top:12px;color:var(--color-primary);"
+                    >📋 Ver histórico de pedidos</a>
                 </aside>
 
             </div>
@@ -264,6 +272,42 @@ async function removerItem(produtoId) {
         }
     } catch {
         showFeedback('Erro de conexão.');
+    }
+}
+
+async function finalizarCompra() {
+    const btn = document.getElementById('btn-finalizar');
+    if (btn) {
+        btn.disabled    = true;
+        btn.textContent = '⏳ Processando…';
+    }
+
+    try {
+        const res  = await fetch('api/pedido/finalizar.php', {
+            method: 'POST',
+            credentials: 'same-origin',
+        });
+        const data = await res.json();
+
+        if (data.sucesso) {
+            showFeedback('✅ ' + data.mensagem, true);
+            // Redireciona ao histórico após 1,5 s
+            setTimeout(() => {
+                window.location.href = 'historico-pedidos.php';
+            }, 1500);
+        } else {
+            showFeedback(data.mensagem || 'Erro ao finalizar compra.');
+            if (btn) {
+                btn.disabled    = false;
+                btn.textContent = '✅ Finalizar Compra';
+            }
+        }
+    } catch {
+        showFeedback('Erro de conexão. Tente novamente.');
+        if (btn) {
+            btn.disabled    = false;
+            btn.textContent = '✅ Finalizar Compra';
+        }
     }
 }
 </script>

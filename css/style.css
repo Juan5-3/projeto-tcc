@@ -2203,3 +2203,194 @@ input, select, textarea {
   margin-top: 2px;
   margin-bottom: 4px;
 }
+
+/* ── 33. Página de Histórico de Pedidos ── */
+.orders-page {
+  padding: var(--spacing-lg) 0 var(--spacing-xxl);
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+/* Card de pedido */
+.order-card {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s;
+}
+
+.order-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* Cabeçalho do card */
+.order-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.order-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.order-id {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.order-date {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.order-card-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+/* Badge de status */
+.order-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.order-status--concluido {
+  background: rgba(76, 175, 80, 0.12);
+  color: #2e7d32;
+}
+
+.order-status--cancelado {
+  background: rgba(244, 67, 54, 0.10);
+  color: #c62828;
+}
+
+/* Total do pedido no header */
+.order-total {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+/* Lista de itens */
+.order-items {
+  padding: var(--spacing-sm) 0;
+}
+
+.order-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: 10px var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 14px;
+  transition: background 0.15s;
+}
+
+.order-item:last-child {
+  border-bottom: none;
+}
+
+.order-item:hover {
+  background: var(--color-bg);
+}
+
+.order-item-name {
+  color: var(--color-text);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.order-item-qty {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.order-item-price {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.order-item-subtotal {
+  font-weight: 700;
+  color: var(--color-text);
+  white-space: nowrap;
+  text-align: right;
+  min-width: 90px;
+}
+
+/* Rodapé do card */
+.order-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-border);
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.order-card-footer strong {
+  font-size: 15px;
+  color: var(--color-text);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .order-item {
+    grid-template-columns: 1fr auto auto;
+    gap: var(--spacing-sm);
+  }
+
+  /* Esconde preço unitário em telas pequenas — mantém nome, qty e subtotal */
+  .order-item-price {
+    display: none;
+  }
+
+  .order-card-header {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .order-items {
+    padding: 0;
+  }
+
+  .order-item {
+    padding: 10px var(--spacing-md);
+  }
+
+  .order-card-footer {
+    padding: var(--spacing-sm) var(--spacing-md);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+}
